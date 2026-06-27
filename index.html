@@ -1114,6 +1114,7 @@
         <ul class="tooltip-summary">${bullets.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
       `;
       tooltip.classList.add('visible');
+      positionTooltip(marker);
     }
 
     function updatePointer(event) {
@@ -1130,13 +1131,14 @@
       const offset = 18;
       const width = tooltip.offsetWidth || 320;
       const height = tooltip.offsetHeight || 170;
-      const left = Math.min(window.innerWidth - width - 14, Math.max(14, x + offset));
-      const top = Math.min(window.innerHeight - height - 14, Math.max(14, y - height * 0.45));
+      const left = Math.round(Math.min(window.innerWidth - width - 14, Math.max(14, x + offset)));
+      const top = Math.round(Math.min(window.innerHeight - height - 14, Math.max(14, y - height * 0.45)));
       tooltip.style.transform = `translate3d(${left}px, ${top}px, 0) scale(1)`;
     }
 
     renderer.domElement.addEventListener('pointermove', event => {
       updatePointer(event);
+      if (hoveredMarker) positionTooltip(hoveredMarker);
     }, { passive: true });
 
     renderer.domElement.addEventListener('pointerleave', () => {
