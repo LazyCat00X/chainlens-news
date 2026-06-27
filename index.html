@@ -1201,16 +1201,10 @@
     controls.minPolarAngle = 0;
     controls.maxPolarAngle = Math.PI;
     controls.rotateSpeed = 0.26;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.8;
     controls.target.set(0, -0.4, 0);
     controls.update();
-
-    let userInteracting = false;
-    let idleTimer = 0;
-    controls.addEventListener('start', () => { userInteracting = true; clearTimeout(idleTimer); });
-    controls.addEventListener('end', () => {
-      clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => { userInteracting = false; }, 1400);
-    });
 
     function resize() {
       const w = window.innerWidth;
@@ -1229,11 +1223,6 @@
     function animate() {
       const elapsed = clock.getElapsedTime();
       const delta = Math.min(clock.getDelta(), 0.033);
-
-      if (!userInteracting) {
-        // ~36 seconds per full rotation.
-        globe.rotation.y += delta * (Math.PI * 2 / 36);
-      }
 
       const pulse = 1 + Math.sin(elapsed * 1.1) * 0.006;
       grid.scale.setScalar(pulse);
