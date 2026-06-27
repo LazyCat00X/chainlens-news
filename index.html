@@ -1120,8 +1120,12 @@
         <div class="tooltip-source">${escapeHtml(article.source)} · ${escapeHtml(marker.userData.city)} · ${escapeHtml(marker.userData.topic)}</div>
         <ul class="tooltip-summary">${bullets.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
       `;
-      tooltip.classList.add('visible');
+      tooltip.style.transition = 'none';
       positionTooltip(marker);
+      tooltip.classList.add('visible');
+      // Force reflow then restore transition
+      tooltip.offsetHeight;
+      tooltip.style.transition = '';
     }
 
     function updatePointer(event) {
