@@ -148,13 +148,14 @@
       pointer-events: none;
       opacity: 0;
       transform: translate3d(-999px, -999px, 0) scale(0.96);
-      transition: opacity 120ms ease, transform 120ms ease;
-      padding: 14px 16px;
+      transition: opacity 120ms ease;
+      will-change: transform;
       border: 1px solid rgba(34, 211, 238, 0.34);
       border-radius: 18px;
       background: linear-gradient(180deg, rgba(7, 10, 22, 0.94), rgba(3, 6, 16, 0.9));
       box-shadow: 0 0 34px rgba(34, 211, 238, 0.18), inset 0 0 24px rgba(99, 102, 241, 0.08);
       backdrop-filter: blur(16px);
+      padding: 14px 16px;
     }
 
     .article-tooltip.visible { opacity: 1; }
@@ -1149,6 +1150,7 @@
 
     renderer.domElement.addEventListener('pointermove', event => {
       updatePointer(event);
+      if (hoveredMarker) positionTooltip(hoveredMarker);
     }, { passive: true });
 
     renderer.domElement.addEventListener('pointerleave', () => {
