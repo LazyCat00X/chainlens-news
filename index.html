@@ -2380,19 +2380,25 @@
         lastCountryLabel = null;
       }
 
-      // ── Country label sprite opacity by zoom ──
+      // ── Country label sprite opacity & size by zoom ──
       const labelGroup = window._countryLabels;
       if (labelGroup) {
         const baseOpacity = Math.min(1, Math.max(0, 1 - (camDist - 5) / 5));
         const globeCenter = new THREE.Vector3(0, -0.8, 0);
+        // Distance scale: shrink labels when zoomed in close
+        const distScale = Math.min(2.0, Math.max(0.5, camDist / 7));
         labelGroup.children.forEach(sprite => {
-          // Hide if on far side of globe (dot product with camera direction)
+          // Hide if on far side of globe
           const toSprite = new THREE.Vector3().copy(sprite.position).sub(globeCenter).normalize();
           const camDir = new THREE.Vector3().copy(camera.position).sub(globeCenter).normalize();
           const facing = toSprite.dot(camDir);
-          // Only show front-facing countries, fade at edges
           const facingFactor = Math.max(0, (facing - 0.15) / 0.7);
           sprite.material.opacity = baseOpacity * facingFactor;
+          // Shrink on zoom-in so labels don't block view
+          const baseScale = sprite.userData.baseScale || sprite.scale.x;
+          if (!sprite.userData.baseScale) sprite.userData.baseScale = sprite.scale.x;
+          const targetScale = baseScale * distScale;
+          sprite.scale.set(targetScale, targetScale * 0.25, 1);
         });
       }
 
