@@ -1426,10 +1426,7 @@
       if (!wasHovering) controls.autoRotate = false;
       const article = marker.userData.article;
       const bullets = summaryBullets(article.ai_summary);
-      tooltip.innerHTML = `<div data-i18n="tooltip.hint" style="color:rgba(136,136,160,0.6);font-size:13px;text-align:center;padding:8px">Hover over a marker</div>`;
-      return;
-    }
-    tooltip.innerHTML = `<div class="tooltip-title">${escapeHtml(article.title)}</div>
+      tooltip.innerHTML = `<div class="tooltip-title">${escapeHtml(article.title)}</div>
         <div class="tooltip-source">${escapeHtml(article.source)} · ${escapeHtml(marker.userData.city)} · ${escapeHtml(marker.userData.topic)}</div>
         <ul class="tooltip-summary">${bullets.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
       `;
