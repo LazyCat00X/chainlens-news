@@ -2378,9 +2378,16 @@
       // ── Country label sprite opacity by zoom ──
       const labelGroup = window._countryLabels;
       if (labelGroup) {
-        const labelOpacity = Math.min(1, Math.max(0, 1 - (camDist - 5) / 5));
+        const baseOpacity = Math.min(1, Math.max(0, 1 - (camDist - 5) / 5));
+        const globeCenter = new THREE.Vector3(0, -0.8, 0);
         labelGroup.children.forEach(sprite => {
-          sprite.material.opacity = labelOpacity;
+          // Hide if on far side of globe (dot product with camera direction)
+          const toSprite = new THREE.Vector3().copy(sprite.position).sub(globeCenter).normalize();
+          const camDir = new THREE.Vector3().copy(camera.position).sub(globeCenter).normalize();
+          const facing = toSprite.dot(camDir);
+          // Only show front-facing countries, fade at edges
+          const facingFactor = Math.max(0, (facing - 0.15) / 0.7);
+          sprite.material.opacity = baseOpacity * facingFactor;
         });
       }
 
