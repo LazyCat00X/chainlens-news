@@ -2089,22 +2089,23 @@
       globe.add(borderGroup);
       // ── Country name sprites on globe surface ──
       const labelGroup = new THREE.Group();
-      const labelCanvas = document.createElement('canvas');
-      labelCanvas.width = 512; labelCanvas.height = 128;
-      const ctx = labelCanvas.getContext('2d');
       countryLookup.forEach(entry => {
         const [lon, lat] = entry.centroid;
         const pos = latLonToVec3(lat, lon, R * 1.045);
-        ctx.clearRect(0, 0, 512, 128);
-        ctx.font = 'bold 48px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.shadowColor = 'rgba(0,0,0,0.8)';
-        ctx.shadowBlur = 12;
-        ctx.fillStyle = '#f0fcff';
-        ctx.fillText(entry.name, 256, 64);
-        ctx.shadowBlur = 0;
-        const tex = new THREE.CanvasTexture(labelCanvas);
+        // Create fresh canvas per country to avoid texture cross-contamination
+        const c = document.createElement('canvas');
+        c.width = 512; c.height = 128;
+        const cx = c.getContext('2d');
+        cx.clearRect(0, 0, 512, 128);
+        cx.font = 'bold 48px Inter, sans-serif';
+        cx.textAlign = 'center';
+        cx.textBaseline = 'middle';
+        cx.shadowColor = 'rgba(0,0,0,0.8)';
+        cx.shadowBlur = 12;
+        cx.fillStyle = '#f0fcff';
+        cx.fillText(entry.name, 256, 64);
+        cx.shadowBlur = 0;
+        const tex = new THREE.CanvasTexture(c);
         tex.minFilter = THREE.LinearFilter;
         const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0, depthWrite: false, depthTest: false });
         const sprite = new THREE.Sprite(mat);
