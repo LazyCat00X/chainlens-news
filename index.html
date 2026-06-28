@@ -2079,7 +2079,6 @@
 
     function animate() {
       const elapsed = clock.getElapsedTime();
-      const delta = clock.getDelta();
 
       const pulse = 1 + Math.sin(elapsed * 1.1) * 0.006;
       grid.scale.setScalar(pulse);
@@ -2092,15 +2091,19 @@
       ringParticleMat.uniforms.uTime.value = elapsed;
       starMaterial.uniforms.uTime.value = elapsed;
 
+      // Reusable temp vector to avoid GC pressure
+      const _v = new THREE.Vector3();
       markerMeshes.forEach((marker, index) => {
         if (!marker.visible) return;
         const isHovered = marker === hoveredMarker;
         const target = isHovered ? 1.85 : 1 + Math.sin(elapsed * 2.6 + index * 0.47) * 0.09;
-        marker.scale.lerp(new THREE.Vector3(target, target, target), 0.18);
+        _v.set(target, target, target);
+        marker.scale.lerp(_v, 0.18);
         marker.material.opacity = isHovered ? 1 : 0.82 + Math.sin(elapsed * 2.2 + index) * 0.12;
         marker.userData.glow.material.opacity = isHovered ? 0.36 : 0.14 + Math.sin(elapsed * 1.8 + index) * 0.05;
       });
-      positionTooltip(hoveredMarker);
+      // Only update tooltip position when hovering
+      if (hoveredMarker) positionTooltip(hoveredMarker);
 
       controls.update();
       renderer.render(scene, camera);
