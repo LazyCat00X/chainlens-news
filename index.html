@@ -2096,12 +2096,16 @@
         const c = document.createElement('canvas');
         c.width = 512; c.height = 128;
         const cx = c.getContext('2d');
-        cx.clearRect(0, 0, 512, 128);
-        cx.font = 'bold 48px Inter, sans-serif';
+        // Calculate label size from country bounding box area
+        const area = (entry.bbox[2] - entry.bbox[0]) * (entry.bbox[3] - entry.bbox[1]);
+        const scaleFactor = Math.sqrt(Math.abs(area)) / 6; // normalize
+        const labelScale = Math.min(2.5, Math.max(0.4, scaleFactor));
+        const fontSize = Math.round(28 + 28 * Math.min(1, scaleFactor));
+        cx.font = `bold ${fontSize}px Inter, sans-serif`;
         cx.textAlign = 'center';
         cx.textBaseline = 'middle';
         cx.shadowColor = 'rgba(0,0,0,0.8)';
-        cx.shadowBlur = 12;
+        cx.shadowBlur = 14;
         cx.fillStyle = '#f0fcff';
         cx.fillText(entry.name, 256, 64);
         cx.shadowBlur = 0;
@@ -2110,7 +2114,7 @@
         const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0, depthWrite: false, depthTest: false });
         const sprite = new THREE.Sprite(mat);
         sprite.position.copy(pos);
-        sprite.scale.set(1.2, 0.3, 1);
+        sprite.scale.set(labelScale * 1.6, labelScale * 0.4, 1);
         sprite.userData.entry = entry;
         labelGroup.add(sprite);
       });
