@@ -1374,25 +1374,33 @@
       });
     }
 
-    // Full-sphere wireframe: latitudes -80° to 80°, no opaque surface.
+    // Full-sphere wireframe: merged into 3 LineSegments for draw-call efficiency
     const grid = new THREE.Group();
     const meridianMat = makeLineMaterial({ color: '#22d3ee', opacity: 0.16 });
     const latitudeMat = makeLineMaterial({ color: '#6366f1', opacity: 0.18 });
     const glowGridMat = makeLineMaterial({ color: '#22d3ee', opacity: 0.06 });
 
+    // Collect all latitude line points into one geometry
+    const latPts = [], latMajorPts = [];
     for (let lat = -75; lat <= 75; lat += 15) {
-      const points = [];
-      for (let lon = -180; lon <= 180; lon += 5) points.push(latLonToVec3(lat, lon, R));
-      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), lat % 30 === 0 ? latitudeMat : glowGridMat);
-      grid.add(line);
+      const pts = [];
+      for (let lon = -180; lon <= 180; lon += 5) pts.push(latLonToVec3(lat, lon, R));
+      const target = lat % 30 === 0 ? latMajorPts : latPts;
+      for (let i = 0; i < pts.length - 1; i++) { target.push(pts[i]); target.push(pts[i+1]); }
     }
+    if (latPts.length) { const g = new THREE.BufferGeometry().setFromPoints(latPts); grid.add(new THREE.LineSegments(g, glowGridMat)); }
+    if (latMajorPts.length) { const g = new THREE.BufferGeometry().setFromPoints(latMajorPts); grid.add(new THREE.LineSegments(g, latitudeMat)); }
 
+    // Collect all meridian line points into one geometry
+    const merPts = [], merMajorPts = [];
     for (let lon = -180; lon < 180; lon += 15) {
-      const points = [];
-      for (let lat = -80; lat <= 80; lat += 3) points.push(latLonToVec3(lat, lon, R));
-      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), lon % 30 === 0 ? meridianMat : glowGridMat);
-      grid.add(line);
+      const pts = [];
+      for (let lat = -80; lat <= 80; lat += 3) pts.push(latLonToVec3(lat, lon, R));
+      const target = lon % 30 === 0 ? merMajorPts : merPts;
+      for (let i = 0; i < pts.length - 1; i++) { target.push(pts[i]); target.push(pts[i+1]); }
     }
+    if (merPts.length) { const g = new THREE.BufferGeometry().setFromPoints(merPts); grid.add(new THREE.LineSegments(g, glowGridMat)); }
+    if (merMajorPts.length) { const g = new THREE.BufferGeometry().setFromPoints(merMajorPts); grid.add(new THREE.LineSegments(g, meridianMat)); }
     globe.add(grid);
 
     // Faint sphere-cap aura (transparent wire-only accent; no opaque surface).
