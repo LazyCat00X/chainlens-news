@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ChainLens — AI-powered world news aggregator</title>
-  <meta name="description" content="ChainLens — AI-powered world news aggregator" />
+  <title>AstroAxis — AI-powered world news aggregator</title>
+  <meta name="description" content="AstroAxis — AI-powered world news aggregator" />
   <style>
     :root {
       --bg: #050611;
@@ -479,7 +479,7 @@
 
 <!-- Top Navigation -->
 <nav class="top-nav">
-  <span class="logo">◆ ChainLens</span>
+  <span class="logo">◆ AstroAxis</span>
   <button class="nav-btn active" data-view="globe" data-i18n="nav.globe">Globe</button>
   <button class="nav-btn" data-view="timeline" data-i18n="nav.timeline">Timeline</button>
   <button class="nav-btn" data-view="feed" data-i18n="nav.feed">Feed</button>
@@ -502,11 +502,11 @@
 </div>
 
 <div id="globe-view" class="view-panel active">
-  <main id="hero" aria-label="ChainLens hologram globe hero">
+  <main id="hero" aria-label="AstroAxis hologram globe hero">
     <canvas id="globe-canvas"></canvas>
     <section class="hud" aria-hidden="true">
       <div class="eyebrow" data-i18n="hud.eyebrow">LIVE SIGNAL MAP</div>
-      <h1>ChainLens</h1>
+      <h1>AstroAxis</h1>
       <p class="subline" data-i18n="hud.subline">AI-powered world news aggregator</p>
     </section>
     <div id="article-tooltip" class="article-tooltip" role="status" aria-live="polite"></div>
@@ -562,7 +562,7 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script>
     // ── View switching ──
-    let currentLang = localStorage.getItem('chainlens-lang') || 'zh-HK';
+    let currentLang = localStorage.getItem('astrolang') || 'zh-HK';
     const timelineData = {"2026": [{"date": "2026-06-27", "title": "Binance EU Exit", "desc": "Binance fails MiCA license, withdraws from EU market", "type": "crypto"}, {"date": "2026-06-24", "title": "Venezuela Earthquake", "desc": "Dual 7.5M earthquakes, 1400+ casualties", "type": "disaster"}, {"date": "2026-04-05", "title": "Iran-US Peace Deal", "desc": "Historic ceasefire signed between US and Iran", "type": "politics"}, {"date": "2026-02-10", "title": "AI Model Proliferation", "desc": "Multiple nations launch sovereign AI models", "type": "tech"}], "2025": [{"date": "2025-09-01", "title": "Crypto Market Correction", "desc": "Bitcoin drops 40% from ATH, broad selloff", "type": "crypto"}, {"date": "2025-06-15", "title": "USMCA Renegotiation", "desc": "North American trade deal renegotiation begins", "type": "finance"}, {"date": "2025-03-28", "title": "AI Export Controls", "desc": "US expands AI chip export restrictions", "type": "tech"}, {"date": "2025-01-20", "title": "New US Administration", "desc": "Inauguration of 47th US President", "type": "politics"}], "2024": [{"date": "2024-11-05", "title": "US Presidential Election", "desc": "2024 United States presidential election", "type": "politics"}, {"date": "2024-07-21", "title": "Global Heatwave Record", "desc": "Hottest day on record globally", "type": "climate"}, {"date": "2024-03-15", "title": "EU AI Act Passed", "desc": "European Parliament passes landmark AI regulation", "type": "tech"}, {"date": "2024-01-10", "title": "Bitcoin ETF Approved", "desc": "SEC approves first spot Bitcoin ETFs", "type": "finance"}], "2023": [{"date": "2023-10-07", "title": "Israel-Gaza War", "desc": "Hamas attack triggers major conflict", "type": "politics"}, {"date": "2023-07-19", "title": "Global Temperature Record", "desc": "Hottest month ever recorded globally", "type": "climate"}, {"date": "2023-05-06", "title": "King Charles Coronation", "desc": "Charles III crowned King of the United Kingdom", "type": "politics"}, {"date": "2023-03-14", "title": "GPT-4 Released", "desc": "OpenAI releases GPT-4, advancing AI capabilities", "type": "tech"}], "2022": [{"date": "2022-11-30", "title": "ChatGPT Launched", "desc": "OpenAI releases ChatGPT, sparking AI revolution", "type": "tech"}, {"date": "2022-09-08", "title": "Queen Elizabeth II Dies", "desc": "Longest-reigning British monarch dies at 96", "type": "politics"}, {"date": "2022-02-24", "title": "Russia Invades Ukraine", "desc": "Full-scale invasion begins, major European conflict", "type": "politics"}, {"date": "2022-01-05", "title": "Bitcoin Crashes", "desc": "Bitcoin drops 50% from Nov 2021 high of $69K", "type": "crypto"}]};
 
     // ── Full UI translations ──
@@ -574,7 +574,7 @@
         'filter.alltime':'ALL TIME','filter.6h':'6H','filter.24h':'24H',
         'filter.bitcoin':'Bitcoin','filter.defi':'DeFi','filter.ai':'AI','filter.regulation':'Regulation',
         'hint.drag':'DRAG TO ROTATE · CLICK MARKERS FOR FULL STORY','hint.scroll':'↓ scroll for articles',
-        'feed.title':'ChainLens Feed','tl.title':'World History Timeline',
+        'feed.title':'AstroAxis Feed','tl.title':'World History Timeline',
         'alert.breaking':'BREAKING:','bias.none':'Neutral','bias.light':'Slight bias','bias.high':'Biased',
       },
       'zh-HK': {
@@ -584,7 +584,7 @@
         'filter.alltime':'全部時間','filter.6h':'6小時','filter.24h':'24小時',
         'filter.bitcoin':'Bitcoin','filter.defi':'DeFi','filter.ai':'AI','filter.regulation':'監管',
         'hint.drag':'拖拽旋轉 · 點擊標記睇全文','hint.scroll':'↓ 向下睇文章',
-        'feed.title':'ChainLens 新聞','tl.title':'世界歷史時間軸',
+        'feed.title':'AstroAxis 新聞','tl.title':'世界歷史時間軸',
         'alert.breaking':'緊急：','bias.none':'中立','bias.light':'略帶偏頗','bias.high':'偏頗',
       },
       'zh-CN': {
@@ -594,7 +594,7 @@
         'filter.alltime':'全部时间','filter.6h':'6小时','filter.24h':'24小时',
         'filter.bitcoin':'比特币','filter.defi':'DeFi','filter.ai':'AI','filter.regulation':'监管',
         'hint.drag':'拖拽旋转 · 点击标记看全文','hint.scroll':'↓ 向下看文章',
-        'feed.title':'ChainLens 新闻','tl.title':'世界历史时间轴',
+        'feed.title':'AstroAxis 新闻','tl.title':'世界历史时间轴',
         'alert.breaking':'紧急：','bias.none':'中立','bias.light':'略有偏见','bias.high':'有偏见',
       },
       ja: {
@@ -604,7 +604,7 @@
         'filter.alltime':'全期間','filter.6h':'6時間','filter.24h':'24時間',
         'filter.bitcoin':'ビットコイン','filter.defi':'DeFi','filter.ai':'AI','filter.regulation':'規制',
         'hint.drag':'ドラッグで回転 · マーカークリックで全文','hint.scroll':'↓ 記事をスクロール',
-        'feed.title':'ChainLens ニュース','tl.title':'世界史タイムライン',
+        'feed.title':'AstroAxis ニュース','tl.title':'世界史タイムライン',
         'alert.breaking':'速報：','bias.none':'中立','bias.light':'やや偏り','bias.high':'偏りあり',
       },
       ko: {
@@ -614,7 +614,7 @@
         'filter.alltime':'전체 기간','filter.6h':'6시간','filter.24h':'24시간',
         'filter.bitcoin':'비트코인','filter.defi':'DeFi','filter.ai':'AI','filter.regulation':'규제',
         'hint.drag':'드래그 회전 · 마커 클릭으로 전체 기사','hint.scroll':'↓ 기사 스크롤',
-        'feed.title':'ChainLens 뉴스','tl.title':'세계 역사 타임라인',
+        'feed.title':'AstroAxis 뉴스','tl.title':'세계 역사 타임라인',
         'alert.breaking':'속보：','bias.none':'중립','bias.light':'약간 편향','bias.high':'편향',
       },
     };
@@ -637,7 +637,7 @@
     document.querySelectorAll('.lang-option').forEach(opt => {
       opt.addEventListener('click', () => {
         currentLang = opt.dataset.lang;
-        localStorage.setItem('chainlens-lang', currentLang);
+        localStorage.setItem('astrolang', currentLang);
         document.querySelectorAll('.lang-option').forEach(o => o.classList.remove('active'));
         opt.classList.add('active');
         document.getElementById('langDropdown').classList.remove('open');
@@ -675,7 +675,7 @@
     function renderFeed() {
       const articles = NEWS_DATA.articles || [];
       if (!articles.length) { document.getElementById('feed-content').innerHTML = '<p style="color:rgba(136,136,160,0.7);text-align:center;padding:40px">No articles yet.</p>'; return; }
-      let html = `<h2 style="font-size:24px;font-weight:700;margin-bottom:20px;background:linear-gradient(135deg,#67e8f9,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${I18N[currentLang]?.['feed.title'] || 'ChainLens Feed'}</h2><div class="feed-grid">`;
+      let html = `<h2 style="font-size:24px;font-weight:700;margin-bottom:20px;background:linear-gradient(135deg,#67e8f9,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${I18N[currentLang]?.['feed.title'] || 'AstroAxis Feed'}</h2><div class="feed-grid">`;
       articles.slice(0, 50).forEach(a => {
         const biasScore = a.bias_score || 0;
         const biasCls = biasScore === 0 ? 'bias-low' : biasScore < 3 ? 'bias-med' : 'bias-high';
