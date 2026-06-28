@@ -164,6 +164,42 @@
     .tooltip-summary { margin-top: 10px; padding-left: 18px; color: rgba(228, 228, 236, 0.82); font-size: 13px; line-height: 1.55; }
     .tooltip-summary li { margin: 5px 0; }
 
+    /* Zoom-in country label — only visible when camera is close enough */
+    .country-label {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 4;
+      pointer-events: none;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 320ms ease;
+      will-change: transform, opacity;
+    }
+    .country-label.visible { opacity: 1; }
+    .country-label .country-name {
+      display: block;
+      font-size: clamp(28px, 4.6vw, 56px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      background: linear-gradient(135deg, #f7ffff 0%, #67e8f9 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 60px rgba(34, 211, 238, 0.25);
+    }
+    .country-label .country-count {
+      display: block;
+      margin-top: 6px;
+      font-size: clamp(13px, 1.6vw, 20px);
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: rgba(136, 146, 182, 0.88);
+      text-shadow: 0 0 30px rgba(99, 102, 241, 0.18);
+    }
+
     .hud {
       position: absolute;
       left: clamp(20px, 5vw, 72px);
@@ -474,6 +510,7 @@
       <p class="subline" data-i18n="hud.subline">AI-powered world news aggregator</p>
     </section>
     <div id="article-tooltip" class="article-tooltip" role="status" aria-live="polite"></div>
+    <div id="country-label" class="country-label"><span class="country-name" id="country-label-name"></span><span class="country-count" id="country-label-count"></span></div>
     <nav class="filter-bar" aria-label="News marker filters">
       <button class="filter-btn active" data-filter-type="all" data-filter-value="All" data-i18n="filter.all">All</button>
       <button class="filter-btn" data-filter-type="region" data-filter-value="Americas" data-i18n="filter.americas">Americas</button>
@@ -1933,6 +1970,82 @@
     globe.add(markerGroup);
     globe.add(continentGroup);
 
+    // ── Country labels on zoom ──
+    let countryLookup = [];
+    const countryNameEl = document.getElementById('country-label-name');
+    const countryCountEl = document.getElementById('country-label-count');
+    const countryLabelEl = document.getElementById('country-label');
+    let lastCountryLabel = null;
+    const ZOOM_THRESHOLD = 10.5;
+
+    // Ray-casting point-in-polygon in 2D lon/lat space
+    function pointInRing(lon, lat, ring) {
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const xi = ring[i][0], yi = ring[i][1];
+        const xj = ring[j][0], yj = ring[j][1];
+        if ((yi > lat) !== (yj > lat) && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    }
+    function findCountry(lon, lat) {
+      for (const entry of countryLookup) {
+        // Bbox pre-filter
+        if (lon < entry.bbox[0] || lon > entry.bbox[2] || lat < entry.bbox[1] || lat > entry.bbox[3]) continue;
+        let found = false;
+        for (const poly of entry.polys) {
+          if (!pointInRing(lon, lat, poly[0])) continue;
+          let inHole = false;
+          for (let k = 1; k < poly.length; k++) { if (pointInRing(lon, lat, poly[k])) { inHole = true; break; } }
+          if (!inHole) { found = true; break; }
+        }
+        if (found) return entry;
+      }
+      return null;
+    }
+
+    async function loadCountries() {
+      try {
+        const resp = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        const countries = topojson.feature(data, data.objects.countries);
+        countries.features.forEach(f => {
+          if (!f.properties || !f.properties.name) return;
+          const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+          // Compute centroid + bounding box from vertex average
+          let sumLon = 0, sumLat = 0, cnt = 0;
+          let minLon = 180, maxLon = -180, minLat = 90, maxLat = -90;
+          polys.forEach(poly => poly[0].forEach(([lon, lat]) => {
+            sumLon += lon; sumLat += lat; cnt++;
+            if (lon < minLon) minLon = lon;
+            if (lon > maxLon) maxLon = lon;
+            if (lat < minLat) minLat = lat;
+            if (lat > maxLat) maxLat = lat;
+          }));
+          countryLookup.push({
+            name: f.properties.name,
+            centroid: [sumLon / cnt, sumLat / cnt],
+            polys,
+            bbox: [minLon, minLat, maxLon, maxLat],
+            count: 0
+          });
+        });
+        // Assign articles to countries (with bbox pre-filter)
+        for (let i = 0; i < count; i++) {
+          const pos = markerPositions[i];
+          if (!pos) continue;
+          const nx = pos.x / (R * 1.035), ny = pos.y / (R * 1.035), nz = pos.z / (R * 1.035);
+          const lat = 90 - THREE.MathUtils.radToDeg(Math.acos(Math.min(1, Math.max(-1, ny))));
+          const lon = THREE.MathUtils.radToDeg(Math.atan2(nz, -nx)) - 180;
+          const country = findCountry(lon, lat);
+          if (country) country.count++;
+        }
+        console.log(`Loaded ${countryLookup.length} countries, ${markerPositions.length} articles mapped`);
+      } catch (e) { console.warn('Country labels unavailable:', e); }
+    }
+    loadCountries();
+
     // Share single uTime across all shader materials
     const _uTime = { value: 0 };
     haloMaterial.uniforms.uTime = _uTime;
@@ -2089,7 +2202,7 @@
     controls.enablePan = false;
     controls.enableZoom = true;
     controls.minDistance = 7;
-    controls.maxDistance = 20;
+    controls.maxDistance = 15;
     controls.enableRotate = true;
     controls.minPolarAngle = 0;
     controls.maxPolarAngle = Math.PI;
@@ -2148,6 +2261,45 @@
         }
       }
       if (needsUpdate) instancedMarkers.instanceMatrix.needsUpdate = true;
+
+      // ── Country label on zoom ──
+      const camDist = camera.position.distanceTo(controls.target);
+      if (camDist < ZOOM_THRESHOLD && countryLookup.length) {
+        // Ray from camera through screen center → globe surface
+        const centerNdc = new THREE.Vector3(0, 0, 0.5);
+        centerNdc.unproject(camera);
+        const rayDir = centerNdc.sub(camera.position).normalize();
+        const globeCenter = new THREE.Vector3(0, -0.8, 0);
+        const toCam = new THREE.Vector3().copy(camera.position).sub(globeCenter);
+        const a = rayDir.dot(rayDir);
+        const b = 2 * rayDir.dot(toCam);
+        const c = toCam.dot(toCam) - R * R;
+        const disc = b * b - 4 * a * c;
+        if (disc >= 0) {
+          const t = (-b - Math.sqrt(disc)) / (2 * a);
+          if (t > 0) {
+            // World → globe local space (undo rotation + translation)
+            const hitWorld = new THREE.Vector3().copy(camera.position).add(rayDir.clone().multiplyScalar(t));
+            const local = hitWorld.sub(globeCenter).applyQuaternion(globe.quaternion.clone().invert());
+            const nx = local.x / R, ny = local.y / R, nz = local.z / R;
+            const lat = 90 - THREE.MathUtils.radToDeg(Math.acos(Math.min(1, Math.max(-1, ny))));
+            const lon = THREE.MathUtils.radToDeg(Math.atan2(nz, -nx)) - 180;
+            const country = findCountry(lon, lat);
+            if (country && country !== lastCountryLabel) {
+              countryNameEl.textContent = country.name;
+              countryCountEl.textContent = country.count + ' article' + (country.count !== 1 ? 's' : '');
+              countryLabelEl.classList.add('visible');
+              lastCountryLabel = country;
+            } else if (!country && lastCountryLabel) {
+              countryLabelEl.classList.remove('visible');
+              lastCountryLabel = null;
+            }
+          }
+        }
+      } else if (lastCountryLabel) {
+        countryLabelEl.classList.remove('visible');
+        lastCountryLabel = null;
+      }
 
       controls.update();
       renderer.render(scene, camera);
