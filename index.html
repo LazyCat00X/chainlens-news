@@ -2046,6 +2046,39 @@
     }
     loadCountries();
 
+    // ── Render country boundary lines ──
+    function renderCountryBorders() {
+      const borderGroup = new THREE.Group();
+      const borderMat = new THREE.LineBasicMaterial({
+        color: 0xffffff, transparent: true, opacity: 0.08, depthWrite: false
+      });
+      const borderGlowMat = new THREE.LineBasicMaterial({
+        color: 0x22d3ee, transparent: true, opacity: 0.03, depthWrite: false
+      });
+      countryLookup.forEach(entry => {
+        entry.polys.forEach(poly => {
+          const ring = poly[0]; // outer ring
+          if (!ring || ring.length < 4) return;
+          // Convert lon/lat to Vec3
+          const pts = ring.map(([lon, lat]) => latLonToVec3(lat, lon, R * 1.025));
+          // Close the ring
+          pts.push(pts[0]);
+          const geom = new THREE.BufferGeometry().setFromPoints(pts);
+          const line = new THREE.Line(geom, borderMat);
+          borderGroup.add(line);
+          // Subtle glow ring
+          const glowPts = ring.map(([lon, lat]) => latLonToVec3(lat, lon, R * 1.018));
+          glowPts.push(glowPts[0]);
+          const glowGeom = new THREE.BufferGeometry().setFromPoints(glowPts);
+          const glowLine = new THREE.Line(glowGeom, borderGlowMat);
+          borderGroup.add(glowLine);
+        });
+      });
+      globe.add(borderGroup);
+      console.log(`Rendered ${countryLookup.length} country boundaries`);
+    }
+    renderCountryBorders();
+
     // Share single uTime across all shader materials
     const _uTime = { value: 0 };
     haloMaterial.uniforms.uTime = _uTime;
@@ -2201,7 +2234,7 @@
     controls.dampingFactor = 0.055;
     controls.enablePan = false;
     controls.enableZoom = true;
-    controls.minDistance = 7;
+    controls.minDistance = 5;
     controls.maxDistance = 15;
     controls.enableRotate = true;
     controls.minPolarAngle = 0;
