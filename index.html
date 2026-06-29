@@ -2403,9 +2403,15 @@
       if (hoveredData) { hoveredIdx = -1; hoveredData = null; tooltip.classList.remove('visible'); }
     }, { passive: true });
 
-    renderer.domElement.addEventListener('click', () => {
-      if (hoveredData && hoveredData.article.url) {
-        window.open(hoveredData.article.url, '_blank', 'noopener,noreferrer');
+    // ── Click cluster → open articles ──
+    renderer.domElement.addEventListener('click', (event) => {
+      if (!hoveredData || !hoveredData.articles) return;
+      const articles = hoveredData.articles;
+      if (articles.length === 1) {
+        window.open(articles[0].url, '_blank');
+      } else {
+        // Open first article for now; tooltip already shows the full list
+        window.open(articles[0].url, '_blank');
       }
     });
 
