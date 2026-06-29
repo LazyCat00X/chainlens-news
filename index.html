@@ -91,16 +91,16 @@
 
     .filter-bar {
       position: fixed;
-      bottom: 40px;
+      bottom: clamp(12px, 4vh, 40px);
       left: 50%;
       transform: translateX(-50%);
       z-index: 10;
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 8px;
-      width: min(920px, calc(100vw - 32px));
-      padding: 10px 12px;
+      gap: clamp(4px, 0.8vw, 8px);
+      width: min(920px, calc(100vw - 16px));
+      padding: clamp(6px, 0.8vh, 10px) clamp(8px, 1vw, 12px);
       border: 1px solid rgba(103, 232, 249, 0.24);
       border-radius: 999px;
       background: linear-gradient(180deg, rgba(8, 14, 31, 0.72), rgba(3, 6, 18, 0.58));
@@ -164,40 +164,42 @@
     .tooltip-summary { margin-top: 10px; padding-left: 18px; color: rgba(228, 228, 236, 0.82); font-size: 13px; line-height: 1.55; }
     .tooltip-summary li { margin: 5px 0; }
 
-    /* Zoom-in country label — only visible when camera is close enough */
+    /* Zoom-in country label — subtle, don't block the view */
     .country-label {
       position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      top: 70px;
+      right: clamp(16px, 4vw, 48px);
+      left: auto;
+      bottom: auto;
+      transform: none;
       z-index: 4;
       pointer-events: none;
-      text-align: center;
+      text-align: right;
       opacity: 0;
       transition: opacity 320ms ease;
-      will-change: transform, opacity;
+      will-change: opacity;
     }
     .country-label.visible { opacity: 1; }
     .country-label .country-name {
       display: block;
-      font-size: clamp(28px, 4.6vw, 56px);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1.05;
+      font-size: clamp(16px, 2vw, 28px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
       background: linear-gradient(135deg, #f7ffff 0%, #67e8f9 100%);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      text-shadow: 0 0 60px rgba(34, 211, 238, 0.25);
+      text-shadow: 0 0 40px rgba(34, 211, 238, 0.15);
     }
     .country-label .country-count {
       display: block;
-      margin-top: 6px;
-      font-size: clamp(13px, 1.6vw, 20px);
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      color: rgba(136, 146, 182, 0.88);
-      text-shadow: 0 0 30px rgba(99, 102, 241, 0.18);
+      margin-top: 2px;
+      font-size: clamp(11px, 1.2vw, 15px);
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: rgba(136, 146, 182, 0.7);
+      text-shadow: none;
     }
 
     .hud {
@@ -382,7 +384,7 @@
 
     .scroll-hint {
       position: fixed;
-      bottom: 12px;
+      bottom: clamp(4px, 1.5vh, 12px);
       left: 50%;
       transform: translateX(-50%);
       z-index: 8;
@@ -408,6 +410,9 @@
       .subline { max-width: 330px; }
       .hint { display: none; }
       .filter-bar { border-radius: 22px; bottom: 12px; padding: 8px; }
+      .filter-btn { font-size: clamp(9px, 1.2vw, 13px); padding: clamp(5px, 0.6vh, 9px) clamp(8px, 1vw, 14px); }
+    }
+    @media (max-width: 640px) {
       .filter-btn { font-size: 10px; padding: 7px 9px; }
     }
   </style>
@@ -1470,6 +1475,18 @@
     if (merMajorPts.length) { const g = new THREE.BufferGeometry().setFromPoints(merMajorPts); grid.add(new THREE.LineSegments(g, meridianMat)); }
     globe.add(grid);
 
+    // ── Depth-occlusion sphere: renders to depth buffer only, no color ──
+    // This prevents back-side elements (borders, labels) from showing through
+    const depthSphere = new THREE.Mesh(
+      new THREE.SphereGeometry(R * 1.012, 48, 24),
+      new THREE.MeshBasicMaterial({
+        colorWrite: false, depthWrite: true, depthTest: true,
+        side: THREE.FrontSide
+      })
+    );
+    depthSphere.renderOrder = 1;
+    globe.add(depthSphere);
+
     // Faint sphere-cap aura (transparent wire-only accent; no opaque surface).
     const haloMaterial = new THREE.ShaderMaterial({
       transparent: true,
@@ -2154,10 +2171,10 @@
     function renderCountryBorders() {
       const borderGroup = new THREE.Group();
       const borderMat = new THREE.LineBasicMaterial({
-        color: 0xffffff, transparent: true, opacity: 0.75, depthWrite: false, depthTest: false
+        color: 0xffffff, transparent: true, opacity: 0.75, depthWrite: false, depthTest: true
       });
       const borderGlowMat = new THREE.LineBasicMaterial({
-        color: 0x22d3ee, transparent: true, opacity: 0.40, depthWrite: false, depthTest: false
+        color: 0x22d3ee, transparent: true, opacity: 0.40, depthWrite: false, depthTest: true
       });
       countryLookup.forEach(entry => {
         entry.polys.forEach(poly => {
