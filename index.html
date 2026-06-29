@@ -2418,6 +2418,13 @@
     window.addEventListener('resize', resize, { passive: true });
     resize();
 
+    // Expose Three.js objects for browser debug/remote inspection
+    window._cam = camera;
+    window._ctrl = controls;
+    window._globe = globe;
+    window._scene = scene;
+    window._renderer2 = renderer;
+
     // ── HUD toggle ──
     const hudPanel = document.getElementById('hud-panel');
     const hudToggle = document.getElementById('hud-toggle');
