@@ -2130,6 +2130,7 @@
     const colorAttr = new THREE.InstancedBufferAttribute(new Float32Array(count * 3), 3);
     // Build scale array for per-instance size
     const scaleAttr = new THREE.InstancedBufferAttribute(new Float32Array(count), 1);
+    const originalPositions = markerPositions.map(p => p.clone());
     for (let i = 0; i < count; i++) {
       dummy.position.copy(markerPositions[i]);
       dummy.scale.set(markerData[i].baseScale, markerData[i].baseScale, markerData[i].baseScale);
@@ -2354,12 +2355,24 @@
     }
 
     function applyFilter() {
+      const dummy = new THREE.Object3D();
       for (let i = 0; i < count; i++) {
         const visible = markerMatchesFilter(markerData[i]);
         invisibleFlags[i] = visible ? 0 : 1;
+        // Physically hide filtered-out markers / restore visible ones
+        instancedMarkers.getMatrixAt(i, dummy.matrix);
+        dummy.matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
+        if (visible) {
+          dummy.position.copy(originalPositions[i]);
+        } else {
+          dummy.position.set(0, -100, 0);
+        }
+        dummy.updateMatrix();
+        instancedMarkers.setMatrixAt(i, dummy.matrix);
+        instancedGlows.setMatrixAt(i, dummy.matrix);
       }
-      instancedMarkers.count = count;
-      instancedGlows.count = count;
+      instancedMarkers.instanceMatrix.needsUpdate = true;
+      instancedGlows.instanceMatrix.needsUpdate = true;
       if (hoveredData && !markerMatchesFilter(hoveredData)) {
         hoveredIdx = -1;
         hoveredData = null;
