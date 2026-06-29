@@ -2296,6 +2296,7 @@
     const pointer = new THREE.Vector2(-10, -10);
     let hoveredIdx = -1;
     let hoveredData = null;
+    let stickyTooltip = null; // when set, tooltip stays visible after click
     let activeFilters = { time: 'all', region: 'All', topic: 'All' };
 
     function markerMatchesFilter(data) {
@@ -2394,6 +2395,7 @@
           tooltip.classList.add('visible');
         }
       } else if (hoveredData) {
+        if (stickyTooltip !== null) return; // don't clear sticky picker
         hoveredIdx = -1;
         hoveredData = null;
         tooltip.classList.remove('visible');
@@ -2410,13 +2412,23 @@
       }
     }, { passive: true });
 
-    // ── Click cluster → open articles ──
+    // ── Click cluster → open articles or show picker ──
     renderer.domElement.addEventListener('click', () => {
+      // If sticky picker is shown and clicking empty space, close it
+      if (stickyTooltip !== null && (!hoveredData || hoveredData === null)) {
+        stickyTooltip = null;
+        hoveredIdx = -1;
+        hoveredData = null;
+        tooltip.classList.remove('visible');
+        if (!controls.autoRotate) controls.autoRotate = true;
+        return;
+      }
       if (!hoveredData || !hoveredData.articles) return;
       const articles = hoveredData.articles;
       if (articles.length === 1) {
         window.location.href = articles[0].url;
       } else {
+        stickyTooltip = hoveredIdx;
         // Show sticky article picker in tooltip
         let html = `<div class="tooltip-title" style="margin-bottom:8px">📦 ${articles.length} articles · ${escapeHtml(hoveredData.city)}</div>`;
         articles.forEach((a, i) => {
