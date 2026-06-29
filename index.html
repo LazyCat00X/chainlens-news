@@ -367,13 +367,17 @@
 
     .hint {
       position: absolute;
-      right: clamp(16px, 4vw, 52px);
+      left: clamp(16px, 4vw, 52px);
       bottom: clamp(16px, 4vh, 42px);
       z-index: 2;
       color: rgba(136, 136, 160, 0.75);
-      font-size: 12px;
+      font-size: 11px;
       letter-spacing: 0.08em;
       pointer-events: none;
+      max-width: calc(100vw - clamp(32px, 8vw, 104px) - clamp(210px, 22vw, 320px));
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .scroll-hint {
@@ -558,15 +562,15 @@
       <h1>AstroAxis</h1>
       <p class="subline" data-i18n="hud.subline">AI-powered world news aggregator</p>
       <div class="hud-legend">
-        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#f97316"></span>Bitcoin</span>
-        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#818cf8"></span>Ethereum</span>
-        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#22c55e"></span>DeFi</span>
-        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#3b82f6"></span>AI</span>
-        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#ef4444"></span>Regulation</span>
-        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#eab308"></span>Policy</span>
-        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#6366f1"></span>Crypto</span>
-        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#22d3ee"></span>Finance</span>
-        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#a78bfa"></span>Tech</span>
+        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#ff8800"></span>Bitcoin</span>
+        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#9999ff"></span>Ethereum</span>
+        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#22dd66"></span>DeFi</span>
+        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#4499ff"></span>AI</span>
+        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#ff4444"></span>Regulation</span>
+        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#ffdd00"></span>Policy</span>
+        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#7777ff"></span>Crypto</span>
+        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#33eeff"></span>Finance</span>
+        <span class="hud-legend-item"><span class="hud-legend-dot" style="background:#bb88ff"></span>Tech</span>
       </div><!-- /hud-legend -->
       </div><!-- /hud-content-inner -->
     </div><!-- /hud-content -->
@@ -1939,16 +1943,16 @@
 
 
     const topicColors = {
-      Bitcoin: '#f97316',
-      Ethereum: '#818cf8',
-      DeFi: '#22c55e',
-      AI: '#3b82f6',
-      Regulation: '#ef4444',
-      Policy: '#eab308',
-      Crypto: '#6366f1',
-      Finance: '#22d3ee',
-      Tech: '#a78bfa',
-      General: '#8888a0'
+      Bitcoin: '#ff8800',
+      Ethereum: '#9999ff',
+      DeFi: '#22dd66',
+      AI: '#4499ff',
+      Regulation: '#ff4444',
+      Policy: '#ffdd00',
+      Crypto: '#7777ff',
+      Finance: '#33eeff',
+      Tech: '#bb88ff',
+      General: '#aaaacc'
     };
 
     function regionFor(lat, lon) {
@@ -2026,7 +2030,7 @@
     // Instanced mesh for markers
     const count = markerPositions.length;
     const markerMat = new THREE.MeshBasicMaterial({
-      transparent: true, opacity: 0.96, blending: THREE.AdditiveBlending, depthWrite: false
+      transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false
     });
     const instancedMarkers = new THREE.InstancedMesh(markerGeometry, markerMat, count);
     const colorAttr = new THREE.InstancedBufferAttribute(new Float32Array(count * 3), 3);
@@ -2042,7 +2046,7 @@
 
     // Instanced mesh for glows
     const glowMat = new THREE.MeshBasicMaterial({
-      transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false
+      transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, depthWrite: false
     });
     const instancedGlows = new THREE.InstancedMesh(glowGeometry, glowMat, count);
     for (let i = 0; i < count; i++) {
@@ -2060,8 +2064,8 @@
       const data = markerData[i];
       data.matrixIndex = i;
       data.instanceScale = 1;
-      data.instanceOpacity = 0.96;
-      data.glowOpacity = 0.18;
+      data.instanceOpacity = 1.0;
+      data.glowOpacity = 0.28;
       markerMeshes.push(data); // reuse markerMeshes array for filter/tooltip logic
     }
     globe.add(markerGroup);
@@ -2421,7 +2425,7 @@
         const s = data.instanceScale;
         const op = isHovered ? 1 : 0.82 + Math.sin(elapsed * 2.2 + i) * 0.12;
         data.instanceOpacity += (op - data.instanceOpacity) * 0.18;
-        const gop = isHovered ? 0.36 : 0.14 + Math.sin(elapsed * 1.8 + i) * 0.05;
+        const gop = isHovered ? 0.50 : 0.22 + Math.sin(elapsed * 1.8 + i) * 0.08;
         data.glowOpacity += (gop - data.glowOpacity) * 0.18;
 
         if (Math.abs(s - prev) > 0.001) {
