@@ -1423,7 +1423,8 @@
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.3;
     renderer.outputEncoding = THREE.sRGBEncoding;
-    renderer.setClearColor(0x000000, 1);
+    renderer.setClearColor(0x000000, 0);
+    renderer.setClearAlpha(0);
     const clock = new THREE.Clock();
     const globe = new THREE.Group();
     globe.rotation.set(0.03, -0.62, 0);
