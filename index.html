@@ -1973,8 +1973,8 @@
 
     const markerGroup = new THREE.Group();
     const markerMeshes = [];
-    const markerGeometry = new THREE.SphereGeometry(0.095, 12, 8);
-    const glowGeometry = new THREE.SphereGeometry(0.19, 12, 8);
+    const markerGeometry = new THREE.SphereGeometry(0.095, 28, 20);
+    const glowGeometry = new THREE.SphereGeometry(0.19, 28, 20);
 
     // Build position + color arrays for instancing
     const markerPositions = [];
@@ -2005,7 +2005,7 @@
       const { baseLat, baseLon, city } = group[0];
       group.forEach((item, i) => {
         // Archimedean spiral: angle grows linearly, radius grows as sqrt(i)
-        const turns = 0.5;
+        const turns = (1 + Math.sqrt(5)) / 2 - 1; // ~0.618, golden ratio — no repeating angles
         const angle = i * turns * Math.PI * 2;
         const radius = i < 1 ? 0 : 0.02 + Math.sqrt(i) * 0.55;
         const cosLat = Math.max(0.05, Math.cos(baseLat * Math.PI / 180));
@@ -2417,13 +2417,16 @@
       // Update instanced marker pulse via instance matrix
       const dummy = new THREE.Object3D();
       let needsUpdate = false;
+      // Distance-based size cap: markers stay readable but never overwhelm the view
+      const camDist = camera.position.distanceTo(controls.target);
+      const distScale = Math.min(2.5, 12 / camDist);
       for (let i = 0; i < count; i++) {
         const data = markerData[i];
         const isHovered = data === hoveredData;
         const target = isHovered ? 1.85 : 1 + Math.sin(elapsed * 2.6 + i * 0.47) * 0.09;
         const prev = data.instanceScale;
         data.instanceScale += (target - prev) * 0.18;
-        const s = data.instanceScale;
+        const s = data.instanceScale * distScale;
         const op = isHovered ? 1 : 0.82 + Math.sin(elapsed * 2.2 + i) * 0.12;
         data.instanceOpacity += (op - data.instanceOpacity) * 0.18;
         const gop = isHovered ? 0.50 : 0.22 + Math.sin(elapsed * 1.8 + i) * 0.08;
@@ -2436,13 +2439,24 @@
           dummy.scale.set(s, s, s);
           dummy.updateMatrix();
           instancedMarkers.setMatrixAt(i, dummy.matrix);
+          // Also update glow instance with same distance-scaled size
+          instancedGlows.getMatrixAt(i, dummy.matrix);
+          const glowPos = new THREE.Vector3().setFromMatrixPosition(dummy.matrix);
+          dummy.position.copy(glowPos);
+          const glowS = s * 2.0; // glow is 2x marker size
+          dummy.scale.set(glowS, glowS, glowS);
+          dummy.updateMatrix();
+          instancedGlows.setMatrixAt(i, dummy.matrix);
           needsUpdate = true;
         }
       }
-      if (needsUpdate) instancedMarkers.instanceMatrix.needsUpdate = true;
+      if (needsUpdate) {
+        instancedMarkers.instanceMatrix.needsUpdate = true;
+        instancedGlows.instanceMatrix.needsUpdate = true;
+      }
 
       // ── Country label on zoom ──
-      const camDist = camera.position.distanceTo(controls.target);
+      // camDist already computed above for marker size cap
       if (camDist < ZOOM_THRESHOLD && countryLookup.length) {
         // Ray from camera through screen center → globe surface
         const centerNdc = new THREE.Vector3(0, 0, 0.5);
@@ -2515,8 +2529,8 @@
           }
 
           // Distance fade: labels visible across full zoom range
-          const opacity = Math.min(1, Math.max(0,
-            1 - Math.abs(camDist - 10) / 8.5
+          const opacity = Math.min(0.85, Math.max(0.12,
+            1 - Math.abs(camDist - 8) / 14
           ));
           sprite.material.opacity = opacity;
 
