@@ -1419,7 +1419,7 @@
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance', preserveDrawingBuffer: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-          renderer.setSize(w, h);
+    renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 1);
     const clock = new THREE.Clock();
     const globe = new THREE.Group();
