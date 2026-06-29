@@ -556,7 +556,7 @@
 
 <!-- Breaking news banner -->
 <div class="breach-banner" id="breachBanner">
-  ⚠️ <strong data-i18n="alert.breaking">BREAKING:</strong> <span id="breachText">Major event detected</span>
+  ⚠️ <strong data-i18n="alert.breaking">BREAKING:</strong> <span id="breachText">Major event detected</span><span id="breachSource" style="color:rgba(255,255,255,0.4);font-weight:400;font-size:13px"></span>
 </div>
 
 <div id="globe-view" class="view-panel active">
@@ -787,7 +787,9 @@
         const urgent = recent.filter(a => /earthquake|tsunami|hurricane|attack|war|crash|collapse|explosion|shooting|pandemic/i.test((a.title||'') + ' ' + (a.ai_summary||'')));
         const banner = document.getElementById('breachBanner');
         if (urgent.length > 0) {
-          document.getElementById('breachText').textContent = urgent[0].title.slice(0, 80);
+          const u = urgent[0];
+          document.getElementById('breachText').textContent = u.title.slice(0, 80);
+          document.getElementById('breachSource').textContent = u.source ? ' · ' + u.source : '';
           banner.classList.add('show');
         } else {
           banner.classList.remove('show');
