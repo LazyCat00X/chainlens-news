@@ -1413,7 +1413,7 @@
     const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 120);
     camera.position.set(0, 1.2, 12.2);
 
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance', preserveDrawingBuffer: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 1);
