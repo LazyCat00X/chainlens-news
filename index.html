@@ -571,6 +571,33 @@
 </head>
 <body>
 
+<!-- Loading Spinner -->
+<div id="loading-overlay" style="position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:#02030a;transition:opacity .5s">
+<div style="text-align:center">
+<svg width="64" height="64" viewBox="0 0 64 64" style="animation:spin .8s linear infinite"><circle cx="32" cy="32" r="28" fill="none" stroke="url(#g)" stroke-width="3" stroke-dasharray="120 56"/><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#67e8f9"/><stop offset="50%" stop-color="#6366f1"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient></defs></svg>
+<div style="color:rgba(238,247,255,.6);font-size:13px;margin-top:18px;letter-spacing:.08em">ASTROAXIS</div>
+<div id="loading-status" style="color:rgba(136,146,182,.5);font-size:11px;margin-top:6px">Initializing globe...</div>
+</div>
+</div>
+@keyframes spin {to{transform:rotate(360deg)}}
+
+<!-- Onboarding Tutorial Overlay -->
+<div id="onboarding-overlay" style="display:none;position:fixed;inset:0;z-index:99;background:rgba(2,3,10,.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;flex-direction:column;gap:14px">
+<div style="max-width:420px;text-align:center;padding:32px 28px;border:1px solid rgba(103,232,249,.24);border-radius:24px;background:linear-gradient(180deg,rgba(7,10,22,.94),rgba(3,6,16,.88))">
+<div style="font-size:40px;margin-bottom:10px">🌍</div>
+<h2 style="font-size:22px;font-weight:700;background:linear-gradient(135deg,#67e8f9,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:14px">Welcome to AstroAxis</h2>
+<div id="onboarding-steps" style="color:rgba(228,228,236,.78);font-size:14px;line-height:2;margin-bottom:10px">
+  <div>🖱 <b>Drag</b> to rotate the globe</div>
+  <div>🔍 <b>Scroll</b> to zoom in/out</div>
+  <div>📍 <b>Click markers</b> to read full stories</div>
+  <div>🔽 <b>Bottom bar</b> to filter by topic & time</div>
+  <div>📑 <b>Top tabs</b> to switch views</div>
+  <div>☆ <b>Bookmark</b> articles to save</div>
+</div>
+<button id="onboarding-close" style="background:rgba(34,211,238,.15);border:1px solid rgba(34,211,238,.5);color:#eaffff;border-radius:999px;padding:10px 36px;cursor:pointer;font:inherit;font-size:14px;font-weight:600;transition:all .2s" onmouseover="this.style.background='rgba(34,211,238,.25)'" onmouseout="this.style.background='rgba(34,211,238,.15)'">Got it! →</button>
+</div>
+</div>
+
 <!-- Top Navigation -->
 <nav class="top-nav" role="tablist" aria-label="View navigation">
   <span class="logo">◆ AstroAxis</span>
@@ -2893,6 +2920,108 @@
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
     }
+
+    // ── Loading Sequence ──
+    (function(){
+      const overlay = document.getElementById('loading-overlay');
+      const status = document.getElementById('loading-status');
+      if(!overlay) return;
+      let steps = ['Loading data...','Building globe...','Rendering markers...'];
+      let i = 0;
+      const tick = setInterval(() => {
+        if(i < steps.length){ status.textContent = steps[i]; i++; }
+      }, 400);
+      const checkReady = () => {
+        if(typeof globeGroup !== 'undefined' && globeGroup && globeGroup.children.length > 0) {
+          clearInterval(tick);
+          overlay.style.opacity = '0';
+          setTimeout(() => { overlay.remove(); }, 600);
+          if(!localStorage.getItem('astroaxis_seen_onboarding')) {
+            setTimeout(() => {
+              const ob = document.getElementById('onboarding-overlay');
+              if(ob){ ob.style.display = 'flex'; }
+            }, 400);
+          }
+          return;
+        }
+        requestAnimationFrame(checkReady);
+      };
+      requestAnimationFrame(checkReady);
+    })();
+
+    // ── Onboarding ──
+    document.getElementById('onboarding-close')?.addEventListener('click', () => {
+      document.getElementById('onboarding-overlay').style.display = 'none';
+      localStorage.setItem('astroaxis_seen_onboarding', '1');
+    });
+
+    // ── Bookmarks (localStorage) ──
+    function getBookmarks(){ try{return JSON.parse(localStorage.getItem('astroaxis_bookmarks')||'[]');}catch(e){return[];} }
+    function saveBookmarks(b){ localStorage.setItem('astroaxis_bookmarks', JSON.stringify(b)); }
+    function toggleBookmark(url, title, source) {
+      let bm = getBookmarks();
+      const idx = bm.findIndex(b => b.url === url);
+      if(idx >= 0){ bm.splice(idx,1); } else { bm.push({url,title,source,time:Date.now()}); }
+      saveBookmarks(bm);
+      renderFeed();
+    }
+    function isBookmarked(url){ return getBookmarks().some(b => b.url === url); }
+    function shareArticle(url, title) {
+      if(navigator.share){ navigator.share({title,url}); }
+      else { navigator.clipboard.writeText(url).then(() => { const t=document.createElement('div');t.textContent='📋 Link copied!';t.style.cssText='position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(34,211,238,.2);border:1px solid #67e8f9;border-radius:12px;padding:10px 20px;color:#eaffff;z-index:100;font-size:13px;font-weight:600';document.body.appendChild(t);setTimeout(()=>t.remove(),1500); }).catch(()=>{ window.open(url,'_blank'); }); }
+    }
+
+    // ── renderFeed override with bookmark + share ──
+    const _origRenderFeed = renderFeed;
+    renderFeed = function() {
+      _origRenderFeed();
+      const cards = document.querySelectorAll('#feed-content .feed-card');
+      cards.forEach(card => {
+        const link = card.querySelector('h3 a');
+        if(!link) return;
+        const url = link.href;
+        const title = link.textContent.replace(/'/g,"\\u2019");
+        const meta = card.querySelector('.card-meta');
+        if(!meta || meta.querySelector('.action-btns')) return;
+        const isBm = isBookmarked(url);
+        const btns = document.createElement('span');
+        btns.className = 'action-btns';
+        btns.style.cssText = 'display:flex;gap:6px;align-items:center';
+        const bmBtn = document.createElement('button');
+        bmBtn.className = 'bm-btn';
+        bmBtn.title = 'Bookmark';
+        bmBtn.style.cssText = 'background:transparent;border:1px solid '+(isBm?'rgba(245,158,11,.5)':'rgba(136,136,160,.2)')+';border-radius:14px;color:'+(isBm?'#f59e0b':'rgba(238,247,255,.4)')+';cursor:pointer;font-size:15px;padding:1px 7px;line-height:1.4;transition:all .15s';
+        bmBtn.textContent = isBm ? '★' : '☆';
+        bmBtn.onclick = function(e){ e.preventDefault(); e.stopPropagation(); toggleBookmark(url, title, ''); };
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'share-btn';
+        shareBtn.title = 'Share';
+        shareBtn.style.cssText = 'background:transparent;border:1px solid rgba(136,136,160,.2);border-radius:14px;color:rgba(238,247,255,.4);cursor:pointer;font-size:14px;padding:1px 7px;line-height:1.4;transition:all .15s';
+        shareBtn.textContent = '↗';
+        shareBtn.onclick = function(e){ e.preventDefault(); e.stopPropagation(); shareArticle(url, title); };
+        btns.appendChild(bmBtn);
+        btns.appendChild(shareBtn);
+        meta.appendChild(btns);
+      });
+    };
+
+    // ── Filter clear-all button ──
+    (function(){
+      const fb = document.querySelector('.filter-bar');
+      if(!fb) return;
+      const clear = document.createElement('button');
+      clear.className = 'filter-btn';
+      clear.textContent = '✕ Clear';
+      clear.style.cssText = 'color:rgba(239,68,68,.7);border-color:rgba(239,68,68,.2)';
+      clear.onclick = () => {
+        document.querySelectorAll('.filter-btn.active').forEach(b => b.classList.remove('active'));
+        document.querySelector('.filter-btn[data-filter-value="All"]')?.classList.add('active');
+        document.querySelector('.filter-btn[data-filter-type="time"][data-filter-value="all"]')?.classList.add('active');
+        activeFilters = {topic:'All',time:'all',region:'All'};
+        renderFeed();
+      };
+      fb.appendChild(clear);
+    })();
 
     animate();
   </script>
